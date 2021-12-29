@@ -1,23 +1,29 @@
 package com.leon.compose_playground
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,9 +35,107 @@ class MainActivity : ComponentActivity() {
         setContent {
             Compose_PlaygroundTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    MySurface(Modifier.align(Alignment.Center))
+//                    MySurface(Modifier.align(Alignment.Center))
+//                    CardDemo()
+//                    AlertDialogSample()
+//                    DropdownDemo()
+//                    LinearProgressIndicatorSample()
+                    CircularProgressIndicatorSample()
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun CheckBoxDemo() {
+    val checkedState = remember { mutableStateOf(true) }
+    Checkbox(
+        checked = checkedState.value,
+        onCheckedChange = { checkedState.value = it }
+    )
+}
+
+@Composable
+fun RadioButtonSample() {
+    val radioOptions = listOf("A", "B", "C")
+    val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[1]) }
+    Column {
+        radioOptions.forEach { text ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .selectable(
+                        selected = (text == selectedOption),
+                        onClick = {
+                            onOptionSelected(text)
+                        }
+                    )
+                    .padding(horizontal = 16.dp)
+            ) {
+                RadioButton(
+                    selected = (text == selectedOption),
+                    onClick = { onOptionSelected(text) }
+                )
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.body1.merge(),
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SwitchDemo() {
+    val checkedState = remember { mutableStateOf(true) }
+    Switch(
+        checked = checkedState.value,
+        onCheckedChange = { checkedState.value = it }
+    )
+}
+
+@Composable
+fun MySliderDemo() {
+    var sliderPosition by remember { mutableStateOf(0f) }
+    Text(text = sliderPosition.toString())
+    Slider(value = sliderPosition, onValueChange = { sliderPosition = it })
+}
+
+@Composable
+fun TextFieldDemo() {
+    Column(Modifier.padding(16.dp)) {
+        val textState = remember { mutableStateOf(TextFieldValue()) }
+        TextField(
+            value = textState.value,
+            onValueChange = { textState.value = it }
+        )
+        Text("The textfield has this text: " + textState.value.text)
+    }
+}
+
+@Composable
+fun SnackbarDemo() {
+    Column {
+        val (snackbarVisibleState, setSnackBarState) = remember { mutableStateOf(false) }
+
+        Button(onClick = { setSnackBarState(!snackbarVisibleState) }) {
+            if (snackbarVisibleState) {
+                Text("Hide Snackbar")
+            } else {
+                Text("Show Snackbar")
+            }
+        }
+        if (snackbarVisibleState) {
+            Snackbar(
+                action = {
+                    Button(onClick = {}) {
+                        Text("MyAction")
+                    }
+                },
+                modifier = Modifier.padding(8.dp)
+            ) { Text(text = "This is a snackbar!") }
         }
     }
 }
@@ -91,6 +195,190 @@ fun BoxExample() {
             onClick = {}
         ) {
             Text("+")
+        }
+    }
+}
+
+@Composable
+fun CardDemo() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(15.dp)
+            .clickable { },
+        elevation = 1.dp
+    ) {
+        Column(modifier = Modifier.padding(15.dp)) {
+            Text(buildAnnotatedString {
+                append("Welcome to ")
+                withStyle(
+                    style = SpanStyle(fontWeight = FontWeight.W900, color = Color(0xFF4552B8))
+                ) {
+                    append("Jetpack Compose Playground")
+                }
+            })
+
+            Text(buildAnnotatedString {
+                append("Now you are in the ")
+                withStyle(
+                    style = SpanStyle(fontWeight = FontWeight.W900)
+                ) {
+                    append("Card")
+                }
+                append(" section")
+            })
+        }
+    }
+}
+
+@Composable
+fun AlertDialogSample() {
+    MaterialTheme {
+        Column {
+            val isOpenDialog = remember {
+                mutableStateOf(false)
+            }
+
+            Button(onClick = { isOpenDialog.value = true }) {
+                Text(text = "Click Me")
+            }
+
+            if (isOpenDialog.value) {
+                AlertDialog(
+                    onDismissRequest = { isOpenDialog.value = false },
+                    title = {
+                        Text(text = "Title")
+                    },
+                    text = {
+                        Text(text = "desc")
+                    },
+                    confirmButton = {
+                        Button(onClick = { isOpenDialog.value = true }) {
+                            Text(text = "Confirm")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { isOpenDialog.value = false }) {
+                            Text(text = "Dismiss")
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun DropdownDemo() {
+    var expanded by remember { mutableStateOf(false) }
+    val items = listOf("A", "B", "C", "D", "E", "F")
+    val disabledValue = "B"
+    var selectedIndex by remember { mutableStateOf(0) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .wrapContentSize(Alignment.TopStart)
+    ) {
+        Text(
+            items[selectedIndex],
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = { expanded = true })
+                .background(
+                    Color.Gray
+                )
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Color.Red
+                )
+        ) {
+            items.forEachIndexed { index, s ->
+                DropdownMenuItem(onClick = {
+                    selectedIndex = index
+                    expanded = false
+                }) {
+                    val disabledText = if (s == disabledValue) {
+                        " (Disabled)"
+                    } else {
+                        ""
+                    }
+                    Text(text = s + disabledText)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LinearProgressIndicatorSample() {
+    var progress by remember { mutableStateOf(0.1f) }
+    val animatedProgress = animateFloatAsState(
+        targetValue = progress,
+        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
+    ).value
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+        Spacer(Modifier.height(30.dp))
+        Text("LinearProgressIndicator with undefined progress")
+        LinearProgressIndicator()
+        Spacer(Modifier.height(30.dp))
+        Text("LinearProgressIndicator with progress set by buttons")
+        LinearProgressIndicator(progress = animatedProgress)
+        Spacer(Modifier.height(30.dp))
+        OutlinedButton(
+            onClick = {
+                if (progress < 1f) progress += 0.1f
+            }
+        ) {
+            Text("Increase")
+        }
+
+        OutlinedButton(
+            onClick = {
+                if (progress > 0f) progress -= 0.1f
+            }
+        ) {
+            Text("Decrease")
+        }
+    }
+}
+
+@Composable
+fun CircularProgressIndicatorSample() {
+    var progress by remember { mutableStateOf(0.1f) }
+    val animatedProgress = animateFloatAsState(
+        targetValue = progress,
+        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
+    ).value
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Spacer(Modifier.height(30.dp))
+        Text("CircularProgressIndicator with undefined progress")
+        CircularProgressIndicator()
+        Spacer(Modifier.height(30.dp))
+        Text("CircularProgressIndicator with progress set by buttons")
+        CircularProgressIndicator(progress = animatedProgress)
+        Spacer(Modifier.height(30.dp))
+        OutlinedButton(
+            onClick = {
+                if (progress < 1f) progress += 0.1f
+            }
+        ) {
+            Text("Increase")
+        }
+
+        OutlinedButton(
+            onClick = {
+                if (progress > 0f) progress -= 0.1f
+            }
+        ) {
+            Text("Decrease")
         }
     }
 }
