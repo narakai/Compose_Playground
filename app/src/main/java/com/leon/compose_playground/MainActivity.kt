@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.leon.compose_playground.ui.theme.Compose_PlaygroundTheme
@@ -40,7 +41,9 @@ class MainActivity : ComponentActivity() {
 //                    AlertDialogSample()
 //                    DropdownDemo()
 //                    LinearProgressIndicatorSample()
-                    CircularProgressIndicatorSample()
+//                    CircularProgressIndicatorSample()
+//                    CompositionLocalDemo()
+                    CompositionLocalDemo2()
                 }
             }
         }
@@ -383,6 +386,96 @@ fun CircularProgressIndicatorSample() {
     }
 }
 
+var isStatic = true
+var compositionLocalName = ""
+val currentLocalColor = if (isStatic) {
+    compositionLocalName = "StaticCompositionLocal 场景"
+    staticCompositionLocalOf { Color.Black }
+} else {
+    compositionLocalName = "DynamicCompositionLocal 场景"
+    compositionLocalOf { Color.Black }
+}
+
+var recomposeFlag = "Init"
+
+@Preview
+@Composable
+fun CompositionLocalDemo(isStatic: Boolean = false) {
+    var color by remember { mutableStateOf(Color.Green) }
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = "${compositionLocalName}")
+            Spacer(Modifier.height(20.dp))
+            CompositionLocalProvider(
+                currentLocalColor provides color
+            ) {
+                TaggedBox("Wrapper: ${recomposeFlag}", 400.dp, Color.Red) {
+                    TaggedBox("Middle: ${recomposeFlag}", 300.dp, currentLocalColor.current) {
+                        TaggedBox("Inner: ${recomposeFlag}", 200.dp, Color.Yellow)
+                    }
+                }
+            }
+            Spacer(Modifier.height(20.dp))
+            Button(
+                onClick = {
+                    color = Color.Blue
+                }
+            ) {
+                Text(text = "Change Theme")
+            }
+        }
+    }
+    recomposeFlag = "Recompose"
+}
+
+@Composable
+fun TaggedBox(tag: String, size: Dp, background: Color, content: @Composable () -> Unit = {}) {
+    Column(
+        modifier = Modifier
+            .size(size)
+            .background(background),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = tag)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            content()
+        }
+    }
+}
+
+var LocalString = compositionLocalOf { "Jetpack Compose" }
+
+@Composable
+fun CompositionLocalDemo2() {
+    Column {
+        CompositionLocalProvider(
+            LocalString provides "Hello World"
+        ) {
+            Text(
+                text = LocalString.current,
+                color = Color.Green
+            )
+            CompositionLocalProvider(
+                LocalString provides "Ruger McCarthy"
+            ) {
+                Text(
+                    text = LocalString.current,
+                    color = Color.Blue
+                )
+            }
+        }
+        Text(
+            text = LocalString.current,
+            color = Color.Red
+        )
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
